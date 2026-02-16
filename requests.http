@@ -1,0 +1,188 @@
+@pgBaseUrl = http://localhost:8080
+@redisBaseUrl = http://localhost:8081
+
+### PostgreSQL - Create user
+POST {{pgBaseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+
+> {% client.global.set("pgUserId", response.body.data.id); %}
+
+### PostgreSQL - Create product
+POST {{pgBaseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Keyboard",
+  "price": 199.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("pgProductId", response.body.data.id); %}
+
+### PostgreSQL - Create second product
+POST {{pgBaseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mouse",
+  "price": 49.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("pgProductId2", response.body.data.id); %}
+
+### PostgreSQL - Get product
+GET {{pgBaseUrl}}/api/products/{{pgProductId}}
+
+### PostgreSQL - Update stock
+POST {{pgBaseUrl}}/api/products/{{pgProductId}}/stock
+Content-Type: application/json
+
+{
+  "delta": -2
+}
+
+### PostgreSQL - Place order
+POST {{pgBaseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "userId": "{{pgUserId}}",
+  "items": [
+    { "productId": "{{pgProductId}}", "quantity": 2 }
+  ]
+}
+
+> {% client.global.set("pgOrderId", response.body.data.orderId); %}
+
+### PostgreSQL - Get order
+GET {{pgBaseUrl}}/api/orders/{{pgOrderId}}
+
+### PostgreSQL - Transaction test: stock adjust with delay
+POST {{pgBaseUrl}}/api/tx-tests/stock-adjust
+Content-Type: application/json
+
+{
+  "productId": "{{pgProductId}}",
+  "delta": -1,
+  "delayMs": 500
+}
+
+### PostgreSQL - Transaction test: forced rollback
+POST {{pgBaseUrl}}/api/tx-tests/order-rollback
+Content-Type: application/json
+
+{
+  "userId": "{{pgUserId}}",
+  "items": [
+    { "productId": "{{pgProductId}}", "quantity": 1 }
+  ]
+}
+
+### PostgreSQL - Transaction test: deadlock
+POST {{pgBaseUrl}}/api/tx-tests/deadlock
+Content-Type: application/json
+
+{
+  "firstProductId": "{{pgProductId}}",
+  "secondProductId": "{{pgProductId2}}",
+  "delayMs": 500
+}
+
+### Redis - Create user
+POST {{redisBaseUrl}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com"
+}
+
+> {% client.global.set("redisUserId", response.body.data.id); %}
+
+### Redis - Create product
+POST {{redisBaseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Keyboard",
+  "price": 199.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("redisProductId", response.body.data.id); %}
+
+### Redis - Create second product
+POST {{redisBaseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mouse",
+  "price": 49.99,
+  "stockQuantity": 100
+}
+
+> {% client.global.set("redisProductId2", response.body.data.id); %}
+
+### Redis - Get product
+GET {{redisBaseUrl}}/api/products/{{redisProductId}}
+
+### Redis - Update stock
+POST {{redisBaseUrl}}/api/products/{{redisProductId}}/stock
+Content-Type: application/json
+
+{
+  "delta": -2
+}
+
+### Redis - Place order
+POST {{redisBaseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "userId": "{{redisUserId}}",
+  "items": [
+    { "productId": "{{redisProductId}}", "quantity": 2 }
+  ]
+}
+
+> {% client.global.set("redisOrderId", response.body.data.orderId); %}
+
+### Redis - Get order
+GET {{redisBaseUrl}}/api/orders/{{redisOrderId}}
+
+### Redis - Transaction test: stock adjust with delay
+POST {{redisBaseUrl}}/api/tx-tests/stock-adjust
+Content-Type: application/json
+
+{
+  "productId": "{{redisProductId}}",
+  "delta": -1,
+  "delayMs": 500
+}
+
+### Redis - Transaction test: forced rollback
+POST {{redisBaseUrl}}/api/tx-tests/order-rollback
+Content-Type: application/json
+
+{
+  "userId": "{{redisUserId}}",
+  "items": [
+    { "productId": "{{redisProductId}}", "quantity": 1 }
+  ]
+}
+
+### Redis - Transaction test: deadlock
+POST {{redisBaseUrl}}/api/tx-tests/deadlock
+Content-Type: application/json
+
+{
+  "firstProductId": "{{redisProductId}}",
+  "secondProductId": "{{redisProductId2}}",
+  "delayMs": 500
+}

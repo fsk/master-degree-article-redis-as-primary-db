@@ -1,0 +1,216 @@
+{
+  "uid": "spring-boot-postgresql",
+  "title": "Spring Boot PostgreSQL Metrics",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "HTTP Requests / sec",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count[1m]))",
+          "legendFormat": "rps"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "HTTP Latency p95/p99",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "JVM Heap Used",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "heap"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Process CPU Usage",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_cpu_usage",
+          "legendFormat": "cpu"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "GC Pause Time (p99)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(jvm_gc_pause_seconds_bucket[5m])) by (le))",
+          "legendFormat": "gc_p99"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "JVM GC Count / sec",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(jvm_gc_pause_seconds_count[1m]))",
+          "legendFormat": "gc_count"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "DB Connections (Active)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(hikaricp_connections_active)",
+          "legendFormat": "active"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "DB Connections (Idle)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(hikaricp_connections_idle)",
+          "legendFormat": "idle"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "HTTP Errors (5xx / sec)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m]))",
+          "legendFormat": "5xx"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "HTTP Errors (4xx / sec)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[1m]))",
+          "legendFormat": "4xx"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "HTTP Requests by Endpoint (rps)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri)",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 40, "w": 12, "h": 8 }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "HTTP p95 by Endpoint",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 40, "w": 12, "h": 8 }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "JVM Heap Used / Max",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "used"
+        },
+        {
+          "expr": "sum(jvm_memory_max_bytes{area=\"heap\"})",
+          "legendFormat": "max"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 48, "w": 12, "h": 8 }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "JVM Thread Count",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads",
+          "legendFormat": "threads"
+        }
+      ],
+      "gridPos": { "x": 12, "y": 48, "w": 12, "h": 8 }
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "JVM Uptime (seconds)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "process_uptime_seconds",
+          "legendFormat": "uptime"
+        }
+      ],
+      "gridPos": { "x": 0, "y": 56, "w": 12, "h": 6 }
+    }
+  ]
+}

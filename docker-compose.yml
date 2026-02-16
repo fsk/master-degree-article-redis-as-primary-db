@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: thesis-postgres
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    container_name: thesis-redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis_data:/data
+
+  redis-always:
+    image: redis:7-alpine
+    container_name: thesis-redis-always
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    profiles: ["aof-always"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./docker/redis/redis-always.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis_always_data:/data
+
+  redisinsight:
+    image: redis/redisinsight:2.54
+    container_name: thesis-redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: thesis-prometheus
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: thesis-grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/spring-boot-postgresql-dashboard.json:/var/lib/grafana/dashboards/spring-boot-postgresql-dashboard.json:ro
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  redis_data:
+  redis_always_data:
