@@ -15,8 +15,8 @@ python main.py
 ```
 
 Varsayılanlar:
-- PostgreSQL API: `http://localhost:8080`
-- Redis API: `http://localhost:8081`
+- PostgreSQL API: `http://localhost:18080`
+- Redis API: `http://localhost:18081`
 - 5.000 user, 10.000 product, 20.000 order
 
 Örnek özelleştirme:

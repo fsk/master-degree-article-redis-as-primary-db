@@ -1,5 +1,5 @@
-@pgBaseUrl = http://localhost:8080
-@redisBaseUrl = http://localhost:8081
+@pgBaseUrl = http://localhost:18080
+@redisBaseUrl = http://localhost:18081
 
 ### PostgreSQL - Create user
 POST {{pgBaseUrl}}/api/users

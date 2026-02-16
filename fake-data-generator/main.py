@@ -9,8 +9,8 @@ from faker import Faker
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate fake data for both APIs.")
-    parser.add_argument("--pg-base-url", default="http://localhost:8080")
-    parser.add_argument("--redis-base-url", default="http://localhost:8081")
+    parser.add_argument("--pg-base-url", default="http://localhost:18080")
+    parser.add_argument("--redis-base-url", default="http://localhost:18081")
     parser.add_argument("--users", type=int, default=5000)
     parser.add_argument("--products", type=int, default=10000)
     parser.add_argument("--orders", type=int, default=20000)
