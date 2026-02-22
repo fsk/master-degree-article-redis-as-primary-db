@@ -64,6 +64,7 @@ services:
     volumes:
       - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./observability/grafana/spring-boot-postgresql-dashboard.json:/var/lib/grafana/dashboards/spring-boot-postgresql-dashboard.json:ro
+      - ./observability/grafana/spring-boot-pg-vs-redis-dashboard.json:/var/lib/grafana/dashboards/spring-boot-pg-vs-redis-dashboard.json:ro
     ports:
       - "13000:3000"
 

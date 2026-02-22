@@ -377,7 +377,7 @@ def generate_all(base_url: str, args, label: str) -> None:
     print(f"[{label}] done")
 
 
-def run_generate(args) -> None:
+def run_generate(args) -> int:
     if args.only in ("pg", "both"):
         check_health(args.pg_base_url, "PostgreSQL")
     if args.only in ("redis", "both"):
@@ -391,7 +391,7 @@ def run_generate(args) -> None:
             print(f"[PostgreSQL] Error: {exc}")
             exit_code = 1
             if not args.continue_on_error:
-                sys.exit(exit_code)
+                return exit_code
 
     if args.only in ("redis", "both"):
         try:
@@ -400,4 +400,37 @@ def run_generate(args) -> None:
             print(f"[Redis] Error: {exc}")
             exit_code = 1
 
-    sys.exit(exit_code)
+    return exit_code
+
+
+def run_benchmark(args) -> int:
+    """Aynı iş yükünü önce PostgreSQL, sonra Redis'e uygulayıp süre karşılaştırması yapar."""
+    import copy
+
+    total_ops = args.users + args.products + args.orders
+    print(f"Benchmark: users={args.users}, products={args.products}, orders={args.orders}")
+    print(f"Yaklaşık toplam istek: {total_ops}")
+    print()
+
+    args_pg = copy.copy(args)
+    args_pg.only = "pg"
+    args_redis = copy.copy(args)
+    args_redis.only = "redis"
+
+    t0 = time.perf_counter()
+    code_pg = run_generate(args_pg)
+    t_pg = time.perf_counter() - t0
+
+    print()
+    t0 = time.perf_counter()
+    code_redis = run_generate(args_redis)
+    t_redis = time.perf_counter() - t0
+
+    print()
+    print("--- Süre karşılaştırması ---")
+    print(f"  PostgreSQL: {t_pg:.1f} s  ({total_ops / t_pg:.0f} istek/s)")
+    print(f"  Redis:     {t_redis:.1f} s  ({total_ops / t_redis:.0f} istek/s)")
+    if t_pg > 0:
+        print(f"  Oran (Redis/PG): {t_redis / t_pg:.2f}x")
+    print()
+    return code_pg if code_pg != 0 else code_redis

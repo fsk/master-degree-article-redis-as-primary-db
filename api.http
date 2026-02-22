@@ -1,0 +1,149 @@
+# API istekleri — CRUD sırası, toplu (bulk) ve transaction testleri
+# Hedef: PostgreSQL 18080, Redis 18081. Bulk / saniyede yüzlerce istek için: scripts/load-test.py
+
+@pg     = http://localhost:18080
+@redis  = http://localhost:18081
+@host   = {{pg}}
+
+# ---------- 1) USERS ----------
+# Sadece Create (API'de list/get yok)
+
+### [PG] User oluştur
+# @host = {{pg}}
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com"
+}
+
+### [Redis] User oluştur
+# @host = {{redis}}
+POST {{host}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com"
+}
+
+
+# ---------- 2) PRODUCTS ----------
+# Create, Read (Get), Update (stock)
+
+### [PG] Ürün oluştur
+POST {{pg}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Ürün 1",
+  "price": 99.50,
+  "stockQuantity": 500
+}
+
+### [Redis] Ürün oluştur
+POST {{redis}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Ürün 1",
+  "price": 99.50,
+  "stockQuantity": 500
+}
+
+### Ürün getir (id'yi yukarıdaki yanıttan alıp aşağıya yazın)
+GET {{host}}/api/products/00000000-0000-0000-0000-000000000000
+
+### Stok güncelle (delta: artı/eksi)
+POST {{host}}/api/products/00000000-0000-0000-0000-000000000000/stock
+Content-Type: application/json
+
+{
+  "delta": -10
+}
+
+
+# ---------- 3) ORDERS ----------
+# Create (place order), Read (get order). userId ve productId yukarıdaki create yanıtlarından.
+
+### Sipariş oluştur
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "items": [
+    { "productId": "00000000-0000-0000-0000-000000000000", "quantity": 2 }
+  ]
+}
+
+### Sipariş getir
+GET {{host}}/api/orders/00000000-0000-0000-0000-000000000000
+
+
+# ---------- 4) BULK ÖRNEK — Aynı isteği tekrarlamak ----------
+# Çok sayıda istek için: REST Client ile bu blokları kopyalayıp id'leri değiştirebilir
+# veya scripts/load-test.py ile toplu / yüksek RPS (saniyede yüzlerce istek) kullanın.
+
+### Bulk: Ürün oluştur 1
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "name": "Bulk Product 1", "price": 10, "stockQuantity": 100 }
+
+### Bulk: Ürün oluştur 2
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "name": "Bulk Product 2", "price": 20, "stockQuantity": 100 }
+
+### Bulk: Ürün oluştur 3
+POST {{host}}/api/products
+Content-Type: application/json
+
+{ "name": "Bulk Product 3", "price": 30, "stockQuantity": 100 }
+
+
+# ---------- 5) TRANSACTION TESTLERİ ----------
+# Gözlem: rollback, eşzamanlı stok, deadlock davranışı (PG vs Redis).
+# Detay: TRX-GOZLEM.md
+
+### Tx: Stok güncelleme + gecikme (eşzamanlı isteklerde davranış)
+POST {{host}}/api/tx-tests/stock-adjust
+Content-Type: application/json
+
+{
+  "productId": "00000000-0000-0000-0000-000000000000",
+  "delta": -1,
+  "delayMs": 500
+}
+
+### Tx: Sipariş sonrası zorunlu rollback (PG'de rollback, Redis'te kısmi yazma riski)
+POST {{host}}/api/tx-tests/order-rollback
+Content-Type: application/json
+
+{
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "items": [
+    { "productId": "00000000-0000-0000-0000-000000000000", "quantity": 1 }
+  ]
+}
+
+### Tx: Deadlock simülasyonu (PG'de deadlock; Redis single-thread, deadlock yok)
+POST {{host}}/api/tx-tests/deadlock
+Content-Type: application/json
+
+{
+  "firstProductId": "00000000-0000-0000-0000-000000000000",
+  "secondProductId": "00000000-0000-0000-0000-000000000000",
+  "delayMs": 500
+}
+
+
+# ---------- 6) SAĞLIK / METRİK ----------
+GET {{pg}}/actuator/health
+###
+GET {{redis}}/actuator/health
+###
+GET {{host}}/actuator/prometheus

@@ -1,8 +1,10 @@
 import argparse
+import sys
+import time
 
 from counts import run_counts
 from drop import run_drop
-from generate import run_generate
+from generate import run_benchmark, run_generate
 from truncate import run_truncate
 
 
@@ -72,13 +74,46 @@ def parse_args() -> argparse.Namespace:
     counts_parser.add_argument("--redis-user", default="redisuser")
     counts_parser.add_argument("--redis-pass", default="redispass")
 
+    benchmark_parser = subparsers.add_parser(
+        "benchmark",
+        help="Aynı iş yükünü PG ve Redis'e uygulayıp süre karşılaştırması yapar",
+    )
+    benchmark_parser.add_argument("--pg-base-url", default="http://localhost:18080")
+    benchmark_parser.add_argument("--redis-base-url", default="http://localhost:18081")
+    benchmark_parser.add_argument("--users", type=int, default=1000)
+    benchmark_parser.add_argument("--products", type=int, default=1000)
+    benchmark_parser.add_argument("--orders", type=int, default=5000)
+    benchmark_parser.add_argument("--min-items", type=int, default=1)
+    benchmark_parser.add_argument("--max-items", type=int, default=3)
+    benchmark_parser.add_argument("--log-every", type=int, default=1000)
+    benchmark_parser.add_argument("--timeout", type=int, default=60)
+    benchmark_parser.add_argument("--retries", type=int, default=5)
+    benchmark_parser.add_argument("--retry-wait", type=int, default=2)
+    benchmark_parser.add_argument("--continue-on-error", dest="continue_on_error", action="store_true")
+    benchmark_parser.add_argument("--no-continue-on-error", dest="continue_on_error", action="store_false")
+    benchmark_parser.set_defaults(continue_on_error=True)
+    benchmark_parser.add_argument("--state-dir", default=".state")
+    benchmark_parser.add_argument("--no-resume", dest="resume", action="store_false")
+    benchmark_parser.add_argument("--seed", type=int, default=42)
+    benchmark_parser.add_argument("--pg-host", default="localhost")
+    benchmark_parser.add_argument("--pg-port", type=int, default=15432)
+    benchmark_parser.add_argument("--pg-db", default="appdb")
+    benchmark_parser.add_argument("--pg-user", default="app")
+    benchmark_parser.add_argument("--pg-pass", default="app")
+    benchmark_parser.add_argument("--redis-host", default="localhost")
+    benchmark_parser.add_argument("--redis-port", type=int, default=16379)
+    benchmark_parser.add_argument("--redis-user", default="redisuser")
+    benchmark_parser.add_argument("--redis-pass", default="redispass")
+
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     if args.command == "generate":
-        run_generate(args)
+        sys.exit(run_generate(args))
+    elif args.command == "benchmark":
+        sys.exit(run_benchmark(args))
     elif args.command == "truncate":
         run_truncate(args)
     elif args.command == "drop":

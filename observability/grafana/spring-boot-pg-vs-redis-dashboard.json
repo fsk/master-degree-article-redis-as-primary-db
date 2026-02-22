@@ -1,0 +1,131 @@
+{
+  "uid": "pg-vs-redis",
+  "title": "PG vs Redis — Karşılaştırma",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "İstek / sn (RPS) — uygulama bazlı",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (job)",
+        "legendFormat": "{{job}}"
+      }],
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Yanıt süresi p95 (saniye) — uygulama bazlı",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))",
+        "legendFormat": "{{job}} p95"
+      }],
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Yanıt süresi p99",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job))",
+        "legendFormat": "{{job}} p99"
+      }],
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Hata oranı (4xx + 5xx) / sn",
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m])) by (job)", "legendFormat": "{{job}} 5xx" },
+        { "expr": "sum(rate(http_server_requests_seconds_count{status=~\"4..\"}[1m])) by (job)", "legendFormat": "{{job}} 4xx" }
+      ],
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "RPS — endpoint bazlı (PG)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=\"spring-boot-postgresql\"}[1m])) by (uri)",
+        "legendFormat": "{{uri}}"
+      }],
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "RPS — endpoint bazlı (Redis)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=\"spring-boot-redis\"}[1m])) by (uri)",
+        "legendFormat": "{{uri}}"
+      }],
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "p95 gecikme — endpoint bazlı (PG)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"spring-boot-postgresql\"}[5m])) by (le, uri))",
+        "legendFormat": "{{uri}}"
+      }],
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "p95 gecikme — endpoint bazlı (Redis)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"spring-boot-redis\"}[5m])) by (le, uri))",
+        "legendFormat": "{{uri}}"
+      }],
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "JVM Heap (PG)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "jvm_memory_used_bytes{job=\"spring-boot-postgresql\", area=\"heap\"}",
+        "legendFormat": "heap"
+      }],
+      "gridPos": { "x": 0, "y": 32, "w": 8, "h": 6 }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "JVM Heap (Redis)",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "jvm_memory_used_bytes{job=\"spring-boot-redis\", area=\"heap\"}",
+        "legendFormat": "heap"
+      }],
+      "gridPos": { "x": 8, "y": 32, "w": 8, "h": 6 }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "CPU kullanımı",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "process_cpu_usage",
+        "legendFormat": "{{job}}"
+      }],
+      "gridPos": { "x": 16, "y": 32, "w": 8, "h": 6 }
+    }
+  ]
+}
